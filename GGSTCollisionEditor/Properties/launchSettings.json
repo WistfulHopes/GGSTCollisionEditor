@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "GGSTCollisionEditor (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "GGSTCollisionEditor (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
