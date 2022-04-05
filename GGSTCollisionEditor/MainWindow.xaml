@@ -84,6 +84,10 @@
                         Icon="Save"
                         Label="Save" />
                     <AppBarButton
+                        Click="renameImage_Click"
+                        Icon="Rename"
+                        Label="Rename Image" />
+                    <AppBarButton
                         Click="addHurtbox_Click"
                         Icon="Add"
                         Label="Add Hurtbox" />

@@ -18,6 +18,7 @@ namespace GGSTCollisionEditor
         public List<JonbinBox> hurtboxes;
         public List<JonbinBox> hitboxes;
         public List<JonbinChunk> chunks;
+        public List<string> imageNames;
 
         public OverlaidImage(StorageFile file, int coloffset)
         {
@@ -399,7 +400,16 @@ namespace GGSTCollisionEditor
             jonbw.Close();
             return true;
         }
-
+        public void ChangeImageName(StorageFile file, int coloffset, string newName, int index)
+        {
+            if (index < imageNames.Count)
+            {
+                BinaryWriter jonbw = new BinaryWriter(new FileStream(file.Path, FileMode.Open));
+                jonbw.Seek(coloffset + 6 + (0x20 * index), SeekOrigin.Begin);
+                jonbw.Write(newName);
+                jonbw.Write(new string('\0', 0x20 - newName.Length));
+            }
+        }
         private void parseJONB(StorageFile file, int coloffset)
         {
             BinaryReader jonbr = new BinaryReader(new FileStream(file.Path, FileMode.Open));
@@ -408,12 +418,12 @@ namespace GGSTCollisionEditor
             {
                 return;
             }
-            Console.WriteLine("Image Names: ");
             short imcount = jonbr.ReadInt16();
+            imageNames = new List<string>();
             for (var i = 0; i < imcount; i++)
             {
                 var strbytes = jonbr.ReadBytes(0x20).TakeWhile(b => (b != 0)).ToArray();
-                Console.WriteLine(Encoding.UTF8.GetString(strbytes, 0, strbytes.Length));
+                imageNames.Add(Encoding.UTF8.GetString(strbytes));
             }
             jonbr.BaseStream.Seek(3, SeekOrigin.Current);
             var chunkcount = jonbr.ReadUInt32();

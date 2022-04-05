@@ -58,6 +58,7 @@ namespace GGSTCollisionEditor
                 stream.Close();
                 StorageFolder Folder1 = ApplicationData.Current.TemporaryFolder;
                 tempFile = await Folder1.CreateFileAsync("tempPAC\\" + file.Name, CreationCollisionOption.ReplaceExisting);
+                SpriteList.SelectedIndex = -1;
                 canvas.Invalidate();
             }
         }
@@ -136,49 +137,61 @@ namespace GGSTCollisionEditor
 
         private void xPos_TextChanged(object sender, TextChangedEventArgs e)
         {
-            JonbinBox currbox = (JonbinBox)BoxList.Items[BoxList.SelectedIndex];
-            float newx;
-            if (float.TryParse(xPos.Text, out newx))
+            if (BoxList.Items.Count > 0)
             {
-                currbox.x = newx;
-                canvas.Invalidate();
-                saveTempFile();
+                JonbinBox currbox = (JonbinBox)BoxList.Items[BoxList.SelectedIndex];
+                float newx;
+                if (float.TryParse(xPos.Text, out newx))
+                {
+                    currbox.x = newx;
+                    canvas.Invalidate();
+                    saveTempFile();
+                }
             }
         }
 
         private void yPos_TextChanged(object sender, TextChangedEventArgs e)
         {
-            JonbinBox currbox = (JonbinBox)BoxList.Items[BoxList.SelectedIndex];
-            float newy;
-            if (float.TryParse(yPos.Text, out newy))
+            if (BoxList.Items.Count > 0)
             {
-                currbox.y = newy;
-                canvas.Invalidate();
-                saveTempFile();
+                JonbinBox currbox = (JonbinBox)BoxList.Items[BoxList.SelectedIndex];
+                float newy;
+                if (float.TryParse(yPos.Text, out newy))
+                {
+                    currbox.y = newy;
+                    canvas.Invalidate();
+                    saveTempFile();
+                }
             }
         }
 
         private void xScl_TextChanged(object sender, TextChangedEventArgs e)
         {
-            JonbinBox currbox = (JonbinBox)BoxList.Items[BoxList.SelectedIndex];
-            float neww;
-            if (float.TryParse(xScl.Text, out neww))
+            if (BoxList.Items.Count > 0)
             {
-                currbox.width = neww;
-                canvas.Invalidate();
-                saveTempFile();
+                JonbinBox currbox = (JonbinBox)BoxList.Items[BoxList.SelectedIndex];
+                float neww;
+                if (float.TryParse(xScl.Text, out neww))
+                {
+                    currbox.width = neww;
+                    canvas.Invalidate();
+                    saveTempFile();
+                }
             }
         }
 
         private void yScl_TextChanged(object sender, TextChangedEventArgs e)
         {
-            JonbinBox currbox = (JonbinBox)BoxList.Items[BoxList.SelectedIndex];
-            float newh;
-            if (float.TryParse(yScl.Text, out newh))
+            if (BoxList.Items.Count > 0)
             {
-                currbox.height = newh;
-                canvas.Invalidate();
-                saveTempFile();
+                JonbinBox currbox = (JonbinBox)BoxList.Items[BoxList.SelectedIndex];
+                float newh;
+                if (float.TryParse(yScl.Text, out newh))
+                {
+                    currbox.height = newh;
+                    canvas.Invalidate();
+                    saveTempFile();
+                }
             }
         }
         private async void saveTempFile()
@@ -251,6 +264,27 @@ namespace GGSTCollisionEditor
                 File.Move(file.Path, savefile.Path, true);
                 file = savefile;
                 canvas.Invalidate();
+                var successDialog = new ContentDialog
+                {
+                    Title = "Successfully saved file!",
+                    CloseButtonText = "OK",
+                    XamlRoot = canvas.XamlRoot,
+                    RequestedTheme = canvas.ActualTheme
+                };
+
+                await successDialog.ShowAsync();
+            }
+            else
+            {
+                var successDialog = new ContentDialog
+                {
+                    Title = "Failed to save file.",
+                    CloseButtonText = "OK",
+                    XamlRoot = canvas.XamlRoot,
+                    RequestedTheme = canvas.ActualTheme
+                };
+
+                await successDialog.ShowAsync();
             }
         }
 
@@ -441,6 +475,112 @@ namespace GGSTCollisionEditor
                     BoxList.SelectedIndex = 0;
                 }
                 canvas.Invalidate();
+            }
+        }
+
+        private async void renameImage_Click(object sender, RoutedEventArgs e)
+        {
+            if (overlaidImage != null)
+            {
+                PACFile.PACEntry colentry = (PACFile.PACEntry)SpriteList.Items[SpriteList.SelectedIndex];
+                var colOffset = col.getOffsetByName(colentry.name);
+                var indexTextBox = new TextBox
+                {
+                    AcceptsReturn = false,
+                    Height = 32,
+                    Text = "0",
+                    SelectionStart = 1
+                };
+                var indexDialog = new ContentDialog
+                {
+                    Content = indexTextBox,
+                    Title = "Please enter the image name index.",
+                    IsSecondaryButtonEnabled = true,
+                    PrimaryButtonText = "OK",
+                    SecondaryButtonText = "Cancel",
+                    XamlRoot = canvas.XamlRoot,
+                    RequestedTheme = canvas.ActualTheme
+                };
+                if (await indexDialog.ShowAsync() == ContentDialogResult.Primary)
+                {
+                    int imageIndex;
+                    if (Int32.TryParse(indexTextBox.Text, out imageIndex))
+                    {
+                        if (imageIndex < overlaidImage.imageNames.Count && imageIndex >= 0)
+                        {
+                            var nameTextBox = new TextBox
+                            {
+                                AcceptsReturn = false,
+                                Height = 32,
+                                Text = overlaidImage.imageNames[imageIndex],
+                                SelectionStart = overlaidImage.imageNames[imageIndex].Length
+                            };
+                            var nameDialog = new ContentDialog
+                            {
+                                Content = nameTextBox,
+                                Title = "Please enter the image name.",
+                                IsSecondaryButtonEnabled = true,
+                                PrimaryButtonText = "OK",
+                                SecondaryButtonText = "Cancel",
+                                XamlRoot = canvas.XamlRoot,
+                                RequestedTheme = canvas.ActualTheme
+                            };
+                            if (await nameDialog.ShowAsync() == ContentDialogResult.Primary)
+                            {
+                                string imageName = nameTextBox.Text;
+                                if (imageName.Length <= 0x20)
+                                {
+                                    overlaidImage.ChangeImageName(file, colOffset, imageName, imageIndex);
+                                    var successDialog = new ContentDialog
+                                    {
+                                        Title = "Successfully changed image name!",
+                                        CloseButtonText = "OK",
+                                        XamlRoot = canvas.XamlRoot,
+                                        RequestedTheme = canvas.ActualTheme
+                                    };
+
+                                    await successDialog.ShowAsync();
+                                }
+                                else
+                                {
+                                    var errorDialog = new ContentDialog
+                                    {
+                                        Title = "The image name must not be longer than 32 characters. Please try again.",
+                                        CloseButtonText = "OK",
+                                        XamlRoot = canvas.XamlRoot,
+                                        RequestedTheme = canvas.ActualTheme
+                                    };
+
+                                    await errorDialog.ShowAsync();
+                                }
+                            }
+                        }
+                        else
+                        {
+                            var errorDialog = new ContentDialog
+                            {
+                                Title = "The index is equal to or larger than the number of images, or is a negative number. Please try again.",
+                                CloseButtonText = "OK",
+                                XamlRoot = canvas.XamlRoot,
+                                RequestedTheme = canvas.ActualTheme
+                            };
+
+                            await errorDialog.ShowAsync();
+                        }
+                    }
+                    else
+                    {
+                        var errorDialog = new ContentDialog
+                        {
+                            Title = "A non-integer value was inputted. Please try again.",
+                            CloseButtonText = "OK",
+                            XamlRoot = canvas.XamlRoot,
+                            RequestedTheme = canvas.ActualTheme
+                        };
+
+                        await errorDialog.ShowAsync();
+                    }
+                }
             }
         }
     }
