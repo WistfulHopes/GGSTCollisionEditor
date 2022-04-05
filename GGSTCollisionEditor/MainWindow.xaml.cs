@@ -19,7 +19,6 @@ namespace GGSTCollisionEditor
     public sealed partial class MainWindow : Window
     {
         PACFile col;
-        int oldListIndex = -1;
         OverlaidImage overlaidImage;
         StorageFile file;
         StorageFile tempFile;
@@ -69,7 +68,6 @@ namespace GGSTCollisionEditor
             {
                 PACFile.PACEntry colentry = (PACFile.PACEntry)SpriteList.Items[SpriteList.SelectedIndex];
                 var colOffset = col.getOffsetByName(colentry.name);
-                oldListIndex = SpriteList.SelectedIndex;
                 overlaidImage = new OverlaidImage(file, colOffset);
 
                 BoxList.Items.Clear();
@@ -263,7 +261,7 @@ namespace GGSTCollisionEditor
                 PACFile.PACEntry colentry = (PACFile.PACEntry)SpriteList.Items[SpriteList.SelectedIndex];
                 var colOffset = col.getOffsetByName(colentry.name);
                 overlaidImage.AddHurtbox(file, colOffset);
-                PACOffsetChange(0x14);
+                PACOffsetAdd(0x14);
                 File.Move(file.Path + ".tmp", tempFile.Path, true);
                 file = tempFile;
 
@@ -293,7 +291,7 @@ namespace GGSTCollisionEditor
                 PACFile.PACEntry colentry = (PACFile.PACEntry)SpriteList.Items[SpriteList.SelectedIndex];
                 var colOffset = col.getOffsetByName(colentry.name);
                 overlaidImage.AddHitbox(file, colOffset);
-                PACOffsetChange(0x14);
+                PACOffsetAdd(0x14);
                 File.Move(file.Path + ".tmp", tempFile.Path, true);
                 file = tempFile;
 
@@ -315,7 +313,7 @@ namespace GGSTCollisionEditor
                 canvas.Invalidate();
             }
         }
-        private void PACOffsetChange(uint size)
+        private void PACOffsetAdd(uint size)
         {
             BinaryWriter jonbw = new BinaryWriter(new FileStream(file.Path + ".tmp", FileMode.Open));
 
@@ -345,6 +343,105 @@ namespace GGSTCollisionEditor
                 }
             }
             jonbw.Close();
+        }
+        private void PACOffsetSub(uint size)
+        {
+            BinaryWriter jonbw = new BinaryWriter(new FileStream(file.Path + ".tmp", FileMode.Open));
+
+            jonbw.Seek(0x8, SeekOrigin.Begin);
+            col.total_size -= size;
+            jonbw.Write(col.total_size);
+
+            jonbw.Seek(0x14, SeekOrigin.Current);
+
+            PACFile.PACEntry colentry = (PACFile.PACEntry)SpriteList.Items[SpriteList.SelectedIndex];
+            int index = col.pacentries.FindIndex(e => e == colentry);
+            if (index != -1)
+            {
+                long pacEntrySize = (col.data_start - 32) / col.file_count;
+                jonbw.Seek((int)pacEntrySize * (index), SeekOrigin.Current);
+                col.pacentries[index].size -= size;
+                jonbw.Seek((int)(col.string_size + 0x8), SeekOrigin.Current);
+                jonbw.Write(col.pacentries[index].size);
+                jonbw.Seek((int)pacEntrySize - 8, SeekOrigin.Current);
+                index++;
+                while (index < col.pacentries.Count)
+                {
+                    col.pacentries[index].offset -= size;
+                    jonbw.Write(col.pacentries[index].offset);
+                    jonbw.Seek((int)pacEntrySize - 4, SeekOrigin.Current);
+                    index++;
+                }
+            }
+            jonbw.Close();
+        }
+
+        private void removeHurtbox_Click(object sender, RoutedEventArgs e)
+        {
+            if (overlaidImage != null)
+            {
+                PACFile.PACEntry colentry = (PACFile.PACEntry)SpriteList.Items[SpriteList.SelectedIndex];
+                var colOffset = col.getOffsetByName(colentry.name);
+                bool success = overlaidImage.RemoveHurtbox(file, colOffset);
+                if (!success)
+                {
+                    return;
+                }
+                PACOffsetSub(0x14);
+                File.Move(file.Path + ".tmp", tempFile.Path, true);
+                file = tempFile;
+
+                overlaidImage = new OverlaidImage(file, colOffset);
+
+                BoxList.Items.Clear();
+                foreach (var box in overlaidImage.hurtboxes)
+                {
+                    BoxList.Items.Add(box);
+                }
+                foreach (var box in overlaidImage.hitboxes)
+                {
+                    BoxList.Items.Add(box);
+                }
+                if (BoxList.Items.Count != 0)
+                {
+                    BoxList.SelectedIndex = 0;
+                }
+                canvas.Invalidate();
+            }
+        }
+
+        private void removeHitbox_Click(object sender, RoutedEventArgs e)
+        {
+            if (overlaidImage != null)
+            {
+                PACFile.PACEntry colentry = (PACFile.PACEntry)SpriteList.Items[SpriteList.SelectedIndex];
+                var colOffset = col.getOffsetByName(colentry.name);
+                bool success = overlaidImage.RemoveHitbox(file, colOffset);
+                if (!success)
+                {
+                    return;
+                }
+                PACOffsetSub(0x14);
+                File.Move(file.Path + ".tmp", tempFile.Path, true);
+                file = tempFile;
+
+                overlaidImage = new OverlaidImage(file, colOffset);
+
+                BoxList.Items.Clear();
+                foreach (var box in overlaidImage.hurtboxes)
+                {
+                    BoxList.Items.Add(box);
+                }
+                foreach (var box in overlaidImage.hitboxes)
+                {
+                    BoxList.Items.Add(box);
+                }
+                if (BoxList.Items.Count != 0)
+                {
+                    BoxList.SelectedIndex = 0;
+                }
+                canvas.Invalidate();
+            }
         }
     }
 }

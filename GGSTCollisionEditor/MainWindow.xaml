@@ -91,6 +91,14 @@
                         Click="addHitbox_Click"
                         Icon="Add"
                         Label="Add Hitbox" />
+                    <AppBarButton
+                        Click="removeHurtbox_Click"
+                        Icon="Remove"
+                        Label="Remove Hurtbox" />
+                    <AppBarButton
+                        Click="removeHitbox_Click"
+                        Icon="Remove"
+                        Label="Remove Hitbox" />
                 </controls:TabbedCommandBarItem>
             </controls:TabbedCommandBar.MenuItems>
         </controls:TabbedCommandBar>
