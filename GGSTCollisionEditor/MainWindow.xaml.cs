@@ -7,8 +7,6 @@ using Windows.Storage.Pickers;
 using Windows.Storage;
 using Windows.Foundation;
 using Microsoft.UI;
-using System.Text;
-using Windows.Storage.FileProperties;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -256,6 +254,97 @@ namespace GGSTCollisionEditor
                 file = savefile;
                 canvas.Invalidate();
             }
+        }
+
+        private void addHurtbox_Click(object sender, RoutedEventArgs e)
+        {
+            if (overlaidImage != null)
+            {
+                PACFile.PACEntry colentry = (PACFile.PACEntry)SpriteList.Items[SpriteList.SelectedIndex];
+                var colOffset = col.getOffsetByName(colentry.name);
+                overlaidImage.AddHurtbox(file, colOffset);
+                PACOffsetChange(0x14);
+                File.Move(file.Path + ".tmp", tempFile.Path, true);
+                file = tempFile;
+
+                overlaidImage = new OverlaidImage(file, colOffset);
+
+                BoxList.Items.Clear();
+                foreach (var box in overlaidImage.hurtboxes)
+                {
+                    BoxList.Items.Add(box);
+                }
+                foreach (var box in overlaidImage.hitboxes)
+                {
+                    BoxList.Items.Add(box);
+                }
+                if (BoxList.Items.Count != 0)
+                {
+                    BoxList.SelectedIndex = 0;
+                }
+                canvas.Invalidate();
+            }
+        }
+
+        private void addHitbox_Click(object sender, RoutedEventArgs e)
+        {
+            if (overlaidImage != null)
+            {
+                PACFile.PACEntry colentry = (PACFile.PACEntry)SpriteList.Items[SpriteList.SelectedIndex];
+                var colOffset = col.getOffsetByName(colentry.name);
+                overlaidImage.AddHitbox(file, colOffset);
+                PACOffsetChange(0x14);
+                File.Move(file.Path + ".tmp", tempFile.Path, true);
+                file = tempFile;
+
+                overlaidImage = new OverlaidImage(file, colOffset);
+
+                BoxList.Items.Clear();
+                foreach (var box in overlaidImage.hurtboxes)
+                {
+                    BoxList.Items.Add(box);
+                }
+                foreach (var box in overlaidImage.hitboxes)
+                {
+                    BoxList.Items.Add(box);
+                }
+                if (BoxList.Items.Count != 0)
+                {
+                    BoxList.SelectedIndex = 0;
+                }
+                canvas.Invalidate();
+            }
+        }
+        private void PACOffsetChange(uint size)
+        {
+            BinaryWriter jonbw = new BinaryWriter(new FileStream(file.Path + ".tmp", FileMode.Open));
+
+            jonbw.Seek(0x8, SeekOrigin.Begin);
+            col.total_size += size;
+            jonbw.Write(col.total_size);
+
+            jonbw.Seek(0x14, SeekOrigin.Current);
+
+            PACFile.PACEntry colentry = (PACFile.PACEntry)SpriteList.Items[SpriteList.SelectedIndex];
+            int index = col.pacentries.FindIndex(e => e == colentry);
+            if (index != -1)
+            {
+                long pacEntrySize = (col.data_start - 32) / col.file_count;
+                jonbw.Seek((int)pacEntrySize * (index), SeekOrigin.Current);
+                col.pacentries[index].size += size;
+                jonbw.Seek((int)(col.string_size + 0x8), SeekOrigin.Current);
+                jonbw.Write(col.pacentries[index].size);
+                jonbw.Seek((int)pacEntrySize - 8, SeekOrigin.Current);
+                index++;
+                while (index < col.pacentries.Count)
+                {
+                    col.pacentries[index].offset += size;
+                    jonbw.Write(col.pacentries[index].offset);
+                    jonbw.Seek((int)pacEntrySize - 4, SeekOrigin.Current);
+                    index++;
+                }
+            }
+            jonbw.Close();
         }
     }
 }

@@ -83,6 +83,14 @@
                         Click="saveFile_Click"
                         Icon="Save"
                         Label="Save" />
+                    <AppBarButton
+                        Click="addHurtbox_Click"
+                        Icon="Add"
+                        Label="Add Hurtbox" />
+                    <AppBarButton
+                        Click="addHitbox_Click"
+                        Icon="Add"
+                        Label="Add Hitbox" />
                 </controls:TabbedCommandBarItem>
             </controls:TabbedCommandBar.MenuItems>
         </controls:TabbedCommandBar>

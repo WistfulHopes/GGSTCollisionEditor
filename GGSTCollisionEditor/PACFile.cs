@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace GGSTCollisionEditor
 {
@@ -13,8 +12,8 @@ namespace GGSTCollisionEditor
         public uint data_start;
         public uint total_size;
         public bool is_bb = true;
-        uint file_count;
-        uint string_size;
+        public uint file_count;
+        public uint string_size;
         private byte[] unk1;
         private byte[] unk2;
         public List<PACEntry> pacentries = new List<PACEntry>();

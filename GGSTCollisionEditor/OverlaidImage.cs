@@ -24,6 +24,190 @@ namespace GGSTCollisionEditor
             parseJONB(file, coloffset);
         }
 
+        public void AddHurtbox(StorageFile file, int coloffset)
+        {
+            BinaryReader jonbr = new BinaryReader(new FileStream(file.Path, FileMode.Open));
+            BinaryWriter jonbw = new BinaryWriter(new FileStream(file.Path + ".tmp", FileMode.Create));
+            jonbr.BaseStream.Seek((long)coloffset, SeekOrigin.Begin);
+            if (!jonbr.ReadChars(4).SequenceEqual(JONBIN_HEADER.ToCharArray()))
+            {
+                return;
+            }
+            short imcount = jonbr.ReadInt16();
+            for (var i = 0; i < imcount; i++)
+            {
+                var strbytes = jonbr.ReadBytes(0x20).TakeWhile(b => (b != 0)).ToArray();
+            }
+            jonbr.BaseStream.Seek(3, SeekOrigin.Current);
+            var chunkcount = jonbr.ReadUInt32();
+
+            int firstPos = (int)jonbr.BaseStream.Position;
+            hurtboxcount = (uint)jonbr.ReadInt16();
+            hitboxcount = (uint)jonbr.ReadInt16();
+
+            chunks = new List<JonbinChunk>();
+            hurtboxes = new List<JonbinBox>();
+            hitboxes = new List<JonbinBox>();
+
+            jonbr.BaseStream.Seek(41 * 2 + 2, SeekOrigin.Current);
+            if (imcount > 0)
+            {
+                for (var c = 0; c < chunkcount; c++)
+                {
+                    var chunk = new JonbinChunk();
+                    chunk.SrcX = jonbr.ReadSingle();
+                    chunk.SrcY = jonbr.ReadSingle();
+                    chunk.SrcWidth = jonbr.ReadSingle();
+                    chunk.SrcHeight = jonbr.ReadSingle();
+                    chunk.DestX = jonbr.ReadSingle();
+                    chunk.DestY = jonbr.ReadSingle();
+                    chunk.DestWidth = jonbr.ReadSingle();
+                    chunk.DestHeight = jonbr.ReadSingle();
+                    jonbr.BaseStream.Seek(0x20, SeekOrigin.Current);
+                    chunk.Layer = jonbr.ReadInt32();
+                    jonbr.BaseStream.Seek(0xC, SeekOrigin.Current);
+                    chunks.Add(chunk);
+                }
+            }
+            for (var h = 0; h < hurtboxcount; h++)
+            {
+                var hurt = new JonbinBox();
+                hurt.id = jonbr.ReadInt32();
+                hurt.x = jonbr.ReadSingle();
+                hurt.y = jonbr.ReadSingle();
+                hurt.width = jonbr.ReadSingle();
+                hurt.height = jonbr.ReadSingle();
+                hurtboxes.Add(hurt);
+            }
+
+            int secondPos = (int)jonbr.BaseStream.Position;
+            jonbr.BaseStream.Seek(0, SeekOrigin.Begin);
+            byte[] firstData = jonbr.ReadBytes(secondPos);
+
+            jonbw.Write(firstData, 0, firstData.Length);
+
+            jonbw.Seek(firstPos, SeekOrigin.Begin);
+            hurtboxcount++;
+            jonbw.Write(hurtboxcount);
+
+            jonbw.Seek(0, SeekOrigin.End);
+
+            jonbw.Write((Int32)0);
+            jonbw.Write((Single)0);
+            jonbw.Write((Single)0);
+            jonbw.Write((Single)0);
+            jonbw.Write((Single)0);
+
+            byte[] secondData = jonbr.ReadBytes((int)jonbr.BaseStream.Length - secondPos);
+
+            jonbw.Write(secondData, 0, secondData.Length);
+
+            for (var h = 0; h < hitboxcount; h++)
+            {
+                var hit = new JonbinBox();
+                hit.id = jonbr.ReadInt32();
+                hit.x = jonbr.ReadSingle();
+                hit.y = jonbr.ReadSingle();
+                hit.width = jonbr.ReadSingle();
+                hit.height = jonbr.ReadSingle();
+                hitboxes.Add(hit);
+            }
+
+            jonbr.Close();
+            jonbw.Close();
+
+        }
+        public void AddHitbox(StorageFile file, int coloffset)
+        {
+            BinaryReader jonbr = new BinaryReader(new FileStream(file.Path, FileMode.Open));
+            BinaryWriter jonbw = new BinaryWriter(new FileStream(file.Path + ".tmp", FileMode.Create));
+            jonbr.BaseStream.Seek((long)coloffset, SeekOrigin.Begin);
+            if (!jonbr.ReadChars(4).SequenceEqual(JONBIN_HEADER.ToCharArray()))
+            {
+                return;
+            }
+            short imcount = jonbr.ReadInt16();
+            for (var i = 0; i < imcount; i++)
+            {
+                var strbytes = jonbr.ReadBytes(0x20).TakeWhile(b => (b != 0)).ToArray();
+            }
+            jonbr.BaseStream.Seek(3, SeekOrigin.Current);
+            var chunkcount = jonbr.ReadUInt32();
+
+            hurtboxcount = (uint)jonbr.ReadInt16();
+            int firstPos = (int)jonbr.BaseStream.Position;
+            hitboxcount = (uint)jonbr.ReadInt16();
+
+            chunks = new List<JonbinChunk>();
+            hurtboxes = new List<JonbinBox>();
+            hitboxes = new List<JonbinBox>();
+
+            jonbr.BaseStream.Seek(41 * 2 + 2, SeekOrigin.Current);
+            if (imcount > 0)
+            {
+                for (var c = 0; c < chunkcount; c++)
+                {
+                    var chunk = new JonbinChunk();
+                    chunk.SrcX = jonbr.ReadSingle();
+                    chunk.SrcY = jonbr.ReadSingle();
+                    chunk.SrcWidth = jonbr.ReadSingle();
+                    chunk.SrcHeight = jonbr.ReadSingle();
+                    chunk.DestX = jonbr.ReadSingle();
+                    chunk.DestY = jonbr.ReadSingle();
+                    chunk.DestWidth = jonbr.ReadSingle();
+                    chunk.DestHeight = jonbr.ReadSingle();
+                    jonbr.BaseStream.Seek(0x20, SeekOrigin.Current);
+                    chunk.Layer = jonbr.ReadInt32();
+                    jonbr.BaseStream.Seek(0xC, SeekOrigin.Current);
+                    chunks.Add(chunk);
+                }
+            }
+            for (var h = 0; h < hurtboxcount; h++)
+            {
+                var hurt = new JonbinBox();
+                hurt.id = jonbr.ReadInt32();
+                hurt.x = jonbr.ReadSingle();
+                hurt.y = jonbr.ReadSingle();
+                hurt.width = jonbr.ReadSingle();
+                hurt.height = jonbr.ReadSingle();
+                hurtboxes.Add(hurt);
+            }
+            for (var h = 0; h < hitboxcount; h++)
+            {
+                var hit = new JonbinBox();
+                hit.id = jonbr.ReadInt32();
+                hit.x = jonbr.ReadSingle();
+                hit.y = jonbr.ReadSingle();
+                hit.width = jonbr.ReadSingle();
+                hit.height = jonbr.ReadSingle();
+                hitboxes.Add(hit);
+            }
+
+            int secondPos = (int)jonbr.BaseStream.Position;
+            jonbr.BaseStream.Seek(0, SeekOrigin.Begin);
+            byte[] firstData = jonbr.ReadBytes(secondPos);
+
+            jonbw.Write(firstData, 0, firstData.Length);
+
+            jonbw.Seek(firstPos, SeekOrigin.Begin);
+            hitboxcount++;
+            jonbw.Write(hitboxcount);
+
+            jonbw.Seek(0, SeekOrigin.End);
+
+            jonbw.Write((Int32)0);
+            jonbw.Write((Single)0);
+            jonbw.Write((Single)0);
+            jonbw.Write((Single)0);
+            jonbw.Write((Single)0);
+
+            byte[] secondData = jonbr.ReadBytes((int)jonbr.BaseStream.Length - secondPos);
+
+            jonbw.Write(secondData, 0, secondData.Length);
+            jonbr.Close();
+            jonbw.Close();
+        }
+
         private void parseJONB(StorageFile file, int coloffset)
         {
             BinaryReader jonbr = new BinaryReader(new FileStream(file.Path, FileMode.Open));

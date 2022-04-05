@@ -8,12 +8,12 @@
 
   <Identity
     Name="c74081df-4f71-4bd0-9b26-fa49ed483e0f"
-    Publisher="CN=theso"
-    Version="1.0.0.0" />
+    Publisher="CN=WistfulHopes"
+    Version="1.1.0.0" />
 
   <Properties>
     <DisplayName>GGSTCollisionEditor</DisplayName>
-    <PublisherDisplayName>theso</PublisherDisplayName>
+    <PublisherDisplayName>WistfulHopes</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -36,7 +36,7 @@
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">
-        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"  Square71x71Logo="Assets\SmallTile.png" Square310x310Logo="Assets\LargeTile.png"/>
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
     </Application>
