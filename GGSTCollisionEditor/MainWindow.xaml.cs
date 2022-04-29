@@ -22,6 +22,10 @@ namespace GGSTCollisionEditor
         OverlaidImage overlaidImage;
         StorageFile file;
         StorageFile tempFile;
+        Windows.Storage.ApplicationDataContainer localSettings =
+            Windows.Storage.ApplicationData.Current.LocalSettings;
+        Windows.Storage.StorageFolder localFolder =
+            Windows.Storage.ApplicationData.Current.LocalFolder;
 
         public MainWindow()
         {
@@ -49,7 +53,7 @@ namespace GGSTCollisionEditor
             {
                 file = newFile;
                 Stream stream = (await file.OpenReadAsync()).AsStreamForRead();
-                col = new PACFile(stream);
+                col = new PACFile(stream, (int)localSettings.Values["game"]);
                 SpriteList.Items.Clear();
                 foreach (var entry in col.pacentries)
                 {
@@ -69,7 +73,16 @@ namespace GGSTCollisionEditor
             {
                 PACFile.PACEntry colentry = (PACFile.PACEntry)SpriteList.Items[SpriteList.SelectedIndex];
                 var colOffset = col.getOffsetByName(colentry.name);
-                overlaidImage = new OverlaidImage(file, colOffset);
+                int game;
+                bool v = Int32.TryParse(localSettings.Values["game"].ToString(), out game);
+                if (v)
+                {
+                    overlaidImage = new OverlaidImage(file, colOffset, game);
+                }
+                else
+                {
+                    overlaidImage = new OverlaidImage(file, colOffset);
+                }
 
                 BoxList.Items.Clear();
                 foreach (var box in overlaidImage.hurtboxes)
@@ -259,7 +272,7 @@ namespace GGSTCollisionEditor
             savePicker.FileTypeChoices.Add("PAC", new List<string>() { ".pac" });
 
             StorageFile savefile = await savePicker.PickSaveFileAsync();
-            if (file != null)
+            if (savefile != null)
             {
                 File.Move(file.Path, savefile.Path, true);
                 file = savefile;
@@ -295,11 +308,27 @@ namespace GGSTCollisionEditor
                 PACFile.PACEntry colentry = (PACFile.PACEntry)SpriteList.Items[SpriteList.SelectedIndex];
                 var colOffset = col.getOffsetByName(colentry.name);
                 overlaidImage.AddHurtbox(file, colOffset);
-                PACOffsetAdd(0x14);
+                if ((int)localSettings.Values["game"] == 1)
+                {
+                    PACOffsetAdd(0x18);
+                }
+                else
+                {
+                    PACOffsetAdd(0x14);
+                }
                 File.Move(file.Path + ".tmp", tempFile.Path, true);
                 file = tempFile;
 
-                overlaidImage = new OverlaidImage(file, colOffset);
+                int game;
+                bool v = Int32.TryParse(localSettings.Values["game"].ToString(), out game);
+                if (v)
+                {
+                    overlaidImage = new OverlaidImage(file, colOffset, game);
+                }
+                else
+                {
+                    overlaidImage = new OverlaidImage(file, colOffset);
+                }
 
                 BoxList.Items.Clear();
                 foreach (var box in overlaidImage.hurtboxes)
@@ -325,11 +354,27 @@ namespace GGSTCollisionEditor
                 PACFile.PACEntry colentry = (PACFile.PACEntry)SpriteList.Items[SpriteList.SelectedIndex];
                 var colOffset = col.getOffsetByName(colentry.name);
                 overlaidImage.AddHitbox(file, colOffset);
-                PACOffsetAdd(0x14);
+                if((int)localSettings.Values["game"] == 1)
+                {
+                    PACOffsetAdd(0x18);
+                }
+                else
+                {
+                    PACOffsetAdd(0x14);
+                }
                 File.Move(file.Path + ".tmp", tempFile.Path, true);
                 file = tempFile;
 
-                overlaidImage = new OverlaidImage(file, colOffset);
+                int game;
+                bool v = Int32.TryParse(localSettings.Values["game"].ToString(), out game);
+                if (v)
+                {
+                    overlaidImage = new OverlaidImage(file, colOffset, game);
+                }
+                else
+                {
+                    overlaidImage = new OverlaidImage(file, colOffset);
+                }
 
                 BoxList.Items.Clear();
                 foreach (var box in overlaidImage.hurtboxes)
@@ -361,19 +406,39 @@ namespace GGSTCollisionEditor
             int index = col.pacentries.FindIndex(e => e == colentry);
             if (index != -1)
             {
-                long pacEntrySize = (col.data_start - 32) / col.file_count;
-                jonbw.Seek((int)pacEntrySize * (index), SeekOrigin.Current);
-                col.pacentries[index].size += size;
-                jonbw.Seek((int)(col.string_size + 0x8), SeekOrigin.Current);
-                jonbw.Write(col.pacentries[index].size);
-                jonbw.Seek((int)pacEntrySize - 8, SeekOrigin.Current);
-                index++;
-                while (index < col.pacentries.Count)
+                if ((int)localSettings.Values["game"] == 0 || (int)localSettings.Values["game"] == 3)
                 {
-                    col.pacentries[index].offset += size;
-                    jonbw.Write(col.pacentries[index].offset);
-                    jonbw.Seek((int)pacEntrySize - 4, SeekOrigin.Current);
+                    long pacEntrySize = (col.data_start - 32) / col.file_count;
+                    jonbw.Seek((int)pacEntrySize * (index), SeekOrigin.Current);
+                    col.pacentries[index].size += size;
+                    jonbw.Seek((int)(col.string_size + 0x8), SeekOrigin.Current);
+                    jonbw.Write(col.pacentries[index].size);
+                    jonbw.Seek((int)pacEntrySize - 8, SeekOrigin.Current);
                     index++;
+                    while (index < col.pacentries.Count)
+                    {
+                        col.pacentries[index].offset += size;
+                        jonbw.Write(col.pacentries[index].offset);
+                        jonbw.Seek((int)pacEntrySize - 4, SeekOrigin.Current);
+                        index++;
+                    }
+                }
+                else
+                {
+                    long pacEntrySize = (col.data_start - 32) / col.file_count;
+                    jonbw.Seek((int)pacEntrySize * (index), SeekOrigin.Current);
+                    col.pacentries[index].size += size;
+                    jonbw.Seek((int)(col.string_size + 0x18), SeekOrigin.Current);
+                    jonbw.Write(col.pacentries[index].size);
+                    jonbw.Seek((int)pacEntrySize - 8, SeekOrigin.Current);
+                    index++;
+                    while (index < col.pacentries.Count)
+                    {
+                        col.pacentries[index].offset += size;
+                        jonbw.Write(col.pacentries[index].offset);
+                        jonbw.Seek((int)pacEntrySize - 8, SeekOrigin.Current);
+                        index++;
+                    }
                 }
             }
             jonbw.Close();
@@ -392,19 +457,39 @@ namespace GGSTCollisionEditor
             int index = col.pacentries.FindIndex(e => e == colentry);
             if (index != -1)
             {
-                long pacEntrySize = (col.data_start - 32) / col.file_count;
-                jonbw.Seek((int)pacEntrySize * (index), SeekOrigin.Current);
-                col.pacentries[index].size -= size;
-                jonbw.Seek((int)(col.string_size + 0x8), SeekOrigin.Current);
-                jonbw.Write(col.pacentries[index].size);
-                jonbw.Seek((int)pacEntrySize - 8, SeekOrigin.Current);
-                index++;
-                while (index < col.pacentries.Count)
+                if ((int)localSettings.Values["game"] == 0 || (int)localSettings.Values["game"] == 3)
                 {
-                    col.pacentries[index].offset -= size;
-                    jonbw.Write(col.pacentries[index].offset);
-                    jonbw.Seek((int)pacEntrySize - 4, SeekOrigin.Current);
+                    long pacEntrySize = (col.data_start - 32) / col.file_count;
+                    jonbw.Seek((int)pacEntrySize * (index), SeekOrigin.Current);
+                    col.pacentries[index].size += size;
+                    jonbw.Seek((int)(col.string_size + 0x8), SeekOrigin.Current);
+                    jonbw.Write(col.pacentries[index].size);
+                    jonbw.Seek((int)pacEntrySize - 8, SeekOrigin.Current);
                     index++;
+                    while (index < col.pacentries.Count)
+                    {
+                        col.pacentries[index].offset += size;
+                        jonbw.Write(col.pacentries[index].offset);
+                        jonbw.Seek((int)pacEntrySize - 4, SeekOrigin.Current);
+                        index++;
+                    }
+                }
+                else
+                {
+                    long pacEntrySize = (col.data_start - 32) / col.file_count;
+                    jonbw.Seek((int)pacEntrySize * (index), SeekOrigin.Current);
+                    col.pacentries[index].size += size;
+                    jonbw.Seek((int)(col.string_size + 0x18), SeekOrigin.Current);
+                    jonbw.Write(col.pacentries[index].size);
+                    jonbw.Seek((int)pacEntrySize - 8, SeekOrigin.Current);
+                    index++;
+                    while (index < col.pacentries.Count)
+                    {
+                        col.pacentries[index].offset += size;
+                        jonbw.Write(col.pacentries[index].offset);
+                        jonbw.Seek((int)pacEntrySize - 4, SeekOrigin.Current);
+                        index++;
+                    }
                 }
             }
             jonbw.Close();
@@ -421,11 +506,27 @@ namespace GGSTCollisionEditor
                 {
                     return;
                 }
-                PACOffsetSub(0x14);
+                if ((int)localSettings.Values["game"] == 1)
+                {
+                    PACOffsetSub(0x18);
+                }
+                else
+                {
+                    PACOffsetSub(0x14);
+                }
                 File.Move(file.Path + ".tmp", tempFile.Path, true);
                 file = tempFile;
 
-                overlaidImage = new OverlaidImage(file, colOffset);
+                int game;
+                bool v = Int32.TryParse(localSettings.Values["game"].ToString(), out game);
+                if (v)
+                {
+                    overlaidImage = new OverlaidImage(file, colOffset, game);
+                }
+                else
+                {
+                    overlaidImage = new OverlaidImage(file, colOffset);
+                }
 
                 BoxList.Items.Clear();
                 foreach (var box in overlaidImage.hurtboxes)
@@ -455,11 +556,27 @@ namespace GGSTCollisionEditor
                 {
                     return;
                 }
-                PACOffsetSub(0x14);
+                if ((int)localSettings.Values["game"] == 1)
+                {
+                    PACOffsetSub(0x18);
+                }
+                else
+                {
+                    PACOffsetSub(0x14);
+                }
                 File.Move(file.Path + ".tmp", tempFile.Path, true);
                 file = tempFile;
 
-                overlaidImage = new OverlaidImage(file, colOffset);
+                int game;
+                bool v = Int32.TryParse(localSettings.Values["game"].ToString(), out game);
+                if (v)
+                {
+                    overlaidImage = new OverlaidImage(file, colOffset, game);
+                }
+                else
+                {
+                    overlaidImage = new OverlaidImage(file, colOffset);
+                }
 
                 BoxList.Items.Clear();
                 foreach (var box in overlaidImage.hurtboxes)
@@ -531,6 +648,8 @@ namespace GGSTCollisionEditor
                                 if (imageName.Length <= 0x20)
                                 {
                                     overlaidImage.ChangeImageName(file, colOffset, imageName, imageIndex);
+                                    File.Move(file.Path + ".tmp", tempFile.Path, true);
+                                    file = tempFile;
                                     var successDialog = new ContentDialog
                                     {
                                         Title = "Successfully changed image name!",
@@ -540,6 +659,7 @@ namespace GGSTCollisionEditor
                                     };
 
                                     await successDialog.ShowAsync();
+
                                 }
                                 else
                                 {
@@ -581,6 +701,39 @@ namespace GGSTCollisionEditor
                         await errorDialog.ShowAsync();
                     }
                 }
+            }
+        }
+
+        private void strive_Click(object sender, RoutedEventArgs e)
+        {
+            localSettings.Values["game"] = 0;
+            if (overlaidImage != null)
+            {
+                overlaidImage.game = 0;
+            }
+        }
+        private void gbvs_Click(object sender, RoutedEventArgs e)
+        {
+            localSettings.Values["game"] = 1;
+            if (overlaidImage != null)
+            {
+                overlaidImage.game = 1;
+            }
+        }
+        private void xrd_Click(object sender, RoutedEventArgs e)
+        {
+            localSettings.Values["game"] = 2;
+            if (overlaidImage != null)
+            {
+                overlaidImage.game = 2;
+            }
+        }
+        private void bb_Click(object sender, RoutedEventArgs e)
+        {
+            localSettings.Values["game"] = 3;
+            if (overlaidImage != null)
+            {
+                overlaidImage.game = 3;
             }
         }
     }

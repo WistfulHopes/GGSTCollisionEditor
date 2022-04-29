@@ -58,6 +58,60 @@ namespace GGSTCollisionEditor
             }
             pacbr.Close();
         }
+        public PACFile(Stream stream, int game)
+        {
+            BinaryReader pacbr = new BinaryReader(stream);
+            char[] maybemagic = pacbr.ReadChars(4);
+            if (!MAGIC.SequenceEqual(maybemagic))
+            {
+                pacbr.BaseStream.Seek(0x38, SeekOrigin.Begin);
+                maybemagic = pacbr.ReadChars(4);
+                if (!MAGIC.SequenceEqual(maybemagic))
+                {
+                    return;
+                }
+                else
+                {
+                    is_bb = false;
+                }
+            }
+            data_start = pacbr.ReadUInt32();
+            total_size = pacbr.ReadUInt32();
+            file_count = pacbr.ReadUInt32();
+            unk1 = pacbr.ReadBytes(4);
+            string_size = pacbr.ReadUInt32();
+            unk2 = pacbr.ReadBytes(8);
+            var entry_size = ((int)data_start - 32) / file_count;
+            for (var i = 0; i < file_count; i++)
+            {
+                PACEntry entry = new PACEntry();
+                long start = pacbr.BaseStream.Position;
+                byte[] namebytes = pacbr.ReadBytes((int)string_size).TakeWhile(b => (b != 0)).ToArray();
+                entry.name = Encoding.UTF8.GetString(namebytes, 0, namebytes.Length);
+                if(game == 1 || game == 3)
+                {
+                    pacbr.BaseStream.Seek(4, SeekOrigin.Current);
+                    entry.offset = pacbr.ReadUInt32();
+                    entry.size = pacbr.ReadUInt32();
+                    while (pacbr.BaseStream.Position < start + entry_size)
+                    {
+                        pacbr.BaseStream.Seek(4, SeekOrigin.Current);
+                    }
+                }
+                else
+                {
+                    pacbr.BaseStream.Seek(0x14, SeekOrigin.Current);
+                    entry.offset = pacbr.ReadUInt32();
+                    entry.size = pacbr.ReadUInt32();
+                    while (pacbr.BaseStream.Position < start + entry_size)
+                    {
+                        pacbr.BaseStream.Seek(4, SeekOrigin.Current);
+                    }
+                }
+                pacentries.Add(entry);
+            }
+            pacbr.Close();
+        }
         public int getOffsetByName(string name)
         {
             var results = pacentries.Where(pe => pe.name.Equals(name));

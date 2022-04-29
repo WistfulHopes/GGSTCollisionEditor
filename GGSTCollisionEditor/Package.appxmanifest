@@ -9,7 +9,7 @@
   <Identity
     Name="c74081df-4f71-4bd0-9b26-fa49ed483e0f"
     Publisher="CN=WistfulHopes"
-    Version="1.1.0.0" />
+    Version="1.2.0.0" />
 
   <Properties>
     <DisplayName>GGSTCollisionEditor</DisplayName>

@@ -19,9 +19,16 @@ namespace GGSTCollisionEditor
         public List<JonbinBox> hitboxes;
         public List<JonbinChunk> chunks;
         public List<string> imageNames;
+        public int game; // 0 = strive, 1 = gbvs, 2 = xrd
 
         public OverlaidImage(StorageFile file, int coloffset)
         {
+            game = 0;
+            parseJONB(file, coloffset);
+        }
+        public OverlaidImage(StorageFile file, int coloffset, int gameIn)
+        {
+            game = gameIn;
             parseJONB(file, coloffset);
         }
 
@@ -49,8 +56,14 @@ namespace GGSTCollisionEditor
             chunks = new List<JonbinChunk>();
             hurtboxes = new List<JonbinBox>();
             hitboxes = new List<JonbinBox>();
-
-            jonbr.BaseStream.Seek(41 * 2 + 2, SeekOrigin.Current);
+            if (game == 0)
+            {
+                jonbr.BaseStream.Seek(41 * 2 + 2, SeekOrigin.Current);
+            }
+            else
+            {
+                jonbr.BaseStream.Seek(41 * 2, SeekOrigin.Current);
+            }
             if (imcount > 0)
             {
                 for (var c = 0; c < chunkcount; c++)
@@ -79,6 +92,10 @@ namespace GGSTCollisionEditor
                 hurt.width = jonbr.ReadSingle();
                 hurt.height = jonbr.ReadSingle();
                 hurtboxes.Add(hurt);
+                if (game == 1)
+                {
+                    jonbr.BaseStream.Seek(4, SeekOrigin.Current);
+                }
             }
 
             int secondPos = (int)jonbr.BaseStream.Position;
@@ -98,6 +115,10 @@ namespace GGSTCollisionEditor
             jonbw.Write((Single)0);
             jonbw.Write((Single)0);
             jonbw.Write((Single)0);
+            if (game == 1)
+            {
+                jonbw.Write((Int32)0);
+            }
 
             byte[] secondData = jonbr.ReadBytes((int)jonbr.BaseStream.Length - secondPos);
 
@@ -112,11 +133,14 @@ namespace GGSTCollisionEditor
                 hit.width = jonbr.ReadSingle();
                 hit.height = jonbr.ReadSingle();
                 hitboxes.Add(hit);
+                if (game == 1)
+                {
+                    jonbr.BaseStream.Seek(4, SeekOrigin.Current);
+                }
             }
 
             jonbr.Close();
             jonbw.Close();
-
         }
         public void AddHitbox(StorageFile file, int coloffset)
         {
@@ -143,7 +167,14 @@ namespace GGSTCollisionEditor
             hurtboxes = new List<JonbinBox>();
             hitboxes = new List<JonbinBox>();
 
-            jonbr.BaseStream.Seek(41 * 2 + 2, SeekOrigin.Current);
+            if (game == 0)
+            {
+                jonbr.BaseStream.Seek(41 * 2 + 2, SeekOrigin.Current);
+            }
+            else
+            {
+                jonbr.BaseStream.Seek(41 * 2, SeekOrigin.Current);
+            }
             if (imcount > 0)
             {
                 for (var c = 0; c < chunkcount; c++)
@@ -172,6 +203,10 @@ namespace GGSTCollisionEditor
                 hurt.width = jonbr.ReadSingle();
                 hurt.height = jonbr.ReadSingle();
                 hurtboxes.Add(hurt);
+                if (game == 1)
+                {
+                    jonbr.BaseStream.Seek(4, SeekOrigin.Current);
+                }
             }
             for (var h = 0; h < hitboxcount; h++)
             {
@@ -182,6 +217,10 @@ namespace GGSTCollisionEditor
                 hit.width = jonbr.ReadSingle();
                 hit.height = jonbr.ReadSingle();
                 hitboxes.Add(hit);
+                if (game == 1)
+                {
+                    jonbr.BaseStream.Seek(4, SeekOrigin.Current);
+                }
             }
 
             int secondPos = (int)jonbr.BaseStream.Position;
@@ -201,6 +240,10 @@ namespace GGSTCollisionEditor
             jonbw.Write((Single)0);
             jonbw.Write((Single)0);
             jonbw.Write((Single)0);
+            if (game == 1)
+            {
+                jonbw.Write((Int32)0);
+            }
 
             byte[] secondData = jonbr.ReadBytes((int)jonbr.BaseStream.Length - secondPos);
 
@@ -241,7 +284,14 @@ namespace GGSTCollisionEditor
             hurtboxes = new List<JonbinBox>();
             hitboxes = new List<JonbinBox>();
 
-            jonbr.BaseStream.Seek(41 * 2 + 2, SeekOrigin.Current);
+            if (game == 0)
+            {
+                jonbr.BaseStream.Seek(41 * 2 + 2, SeekOrigin.Current);
+            }
+            else
+            {
+                jonbr.BaseStream.Seek(41 * 2, SeekOrigin.Current);
+            }
             if (imcount > 0)
             {
                 for (var c = 0; c < chunkcount; c++)
@@ -270,6 +320,10 @@ namespace GGSTCollisionEditor
                 hurt.width = jonbr.ReadSingle();
                 hurt.height = jonbr.ReadSingle();
                 hurtboxes.Add(hurt);
+                if (game == 1)
+                {
+                    jonbr.BaseStream.Seek(4, SeekOrigin.Current);
+                }
             }
 
             int secondPos = (int)jonbr.BaseStream.Position;
@@ -299,6 +353,10 @@ namespace GGSTCollisionEditor
                 hit.width = jonbr.ReadSingle();
                 hit.height = jonbr.ReadSingle();
                 hitboxes.Add(hit);
+                if (game == 1)
+                {
+                    jonbr.BaseStream.Seek(4, SeekOrigin.Current);
+                }
             }
 
             jonbr.Close();
@@ -338,7 +396,14 @@ namespace GGSTCollisionEditor
             hurtboxes = new List<JonbinBox>();
             hitboxes = new List<JonbinBox>();
 
-            jonbr.BaseStream.Seek(41 * 2 + 2, SeekOrigin.Current);
+            if (game == 0)
+            {
+                jonbr.BaseStream.Seek(41 * 2 + 2, SeekOrigin.Current);
+            }
+            else
+            {
+                jonbr.BaseStream.Seek(41 * 2, SeekOrigin.Current);
+            }
             if (imcount > 0)
             {
                 for (var c = 0; c < chunkcount; c++)
@@ -367,6 +432,10 @@ namespace GGSTCollisionEditor
                 hurt.width = jonbr.ReadSingle();
                 hurt.height = jonbr.ReadSingle();
                 hurtboxes.Add(hurt);
+                if (game == 1)
+                {
+                    jonbr.BaseStream.Seek(4, SeekOrigin.Current);
+                }
             }
             for (var h = 0; h < hitboxcount - 1; h++)
             {
@@ -377,6 +446,10 @@ namespace GGSTCollisionEditor
                 hit.width = jonbr.ReadSingle();
                 hit.height = jonbr.ReadSingle();
                 hitboxes.Add(hit);
+                if (game == 1)
+                {
+                    jonbr.BaseStream.Seek(4, SeekOrigin.Current);
+                }
             }
 
             int secondPos = (int)jonbr.BaseStream.Position;
@@ -404,10 +477,18 @@ namespace GGSTCollisionEditor
         {
             if (index < imageNames.Count)
             {
-                BinaryWriter jonbw = new BinaryWriter(new FileStream(file.Path, FileMode.Open));
+                imageNames[index] = newName;
+                BinaryReader jonbr = new BinaryReader(new FileStream(file.Path, FileMode.Open));
+                BinaryWriter jonbw = new BinaryWriter(new FileStream(file.Path + ".tmp", FileMode.Create));
+                byte[] data = jonbr.ReadBytes((int)jonbr.BaseStream.Length);
+                jonbw.Write(data, 0, data.Length);
                 jonbw.Seek(coloffset + 6 + (0x20 * index), SeekOrigin.Begin);
-                jonbw.Write(newName);
-                jonbw.Write(new string('\0', 0x20 - newName.Length));
+                byte[] newNameBytes = Encoding.GetEncoding("UTF-8").GetBytes(newName);
+                jonbw.Write(newNameBytes);
+                jonbw.Seek(1, SeekOrigin.End);
+                jonbw.Write(new string('\0', 0x20 - newName.Length + 1));
+                jonbr.Close();
+                jonbw.Close();
             }
         }
         private void parseJONB(StorageFile file, int coloffset)
@@ -432,7 +513,14 @@ namespace GGSTCollisionEditor
             chunks = new List<JonbinChunk>();
             hurtboxes = new List<JonbinBox>();
             hitboxes = new List<JonbinBox>();
-            jonbr.BaseStream.Seek(41 * 2 + 2, SeekOrigin.Current);
+            if (game == 0)
+            {
+                jonbr.BaseStream.Seek(41 * 2 + 2, SeekOrigin.Current);
+            }
+            else
+            {
+                jonbr.BaseStream.Seek(41 * 2, SeekOrigin.Current);
+            }
             if (imcount > 0)
             {
                 for (var c = 0; c < chunkcount; c++)
@@ -461,6 +549,10 @@ namespace GGSTCollisionEditor
                 hurt.width = jonbr.ReadSingle();
                 hurt.height = jonbr.ReadSingle();
                 hurtboxes.Add(hurt);
+                if (game == 1)
+                {
+                    jonbr.BaseStream.Seek(4, SeekOrigin.Current);
+                }
             }
             for (var h = 0; h < hitboxcount; h++)
             {
@@ -471,6 +563,10 @@ namespace GGSTCollisionEditor
                 hit.width = jonbr.ReadSingle();
                 hit.height = jonbr.ReadSingle();
                 hitboxes.Add(hit);
+                if (game == 1)
+                {
+                    jonbr.BaseStream.Seek(4, SeekOrigin.Current);
+                }
             }
             jonbr.Close();
         }
